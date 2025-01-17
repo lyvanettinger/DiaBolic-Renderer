@@ -16,6 +16,8 @@
 #include "pipelines/geometry_pipeline.hpp"
 #include "pipelines/ui_pipeline.hpp"
 
+#include <array>
+
 
 Renderer::Renderer(std::shared_ptr<Application> app) :
 	_app(app),
@@ -32,7 +34,7 @@ Renderer::Renderer(std::shared_ptr<Application> app) :
     InitializeCommandQueues();
     InitializeDescriptorHeaps();
     InitializeSwapchainResources();
-    ResizeDepthBuffer();
+    CreateDepthBuffer();
 
     // Create pipelines
     _geometryPipeline = std::make_unique<GeometryPipeline>(*this, _camera);
@@ -56,6 +58,13 @@ void Renderer::Render()
     auto commandList = _directCommandQueue->GetCommandList();
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(_rtvHeap->getDescriptorHandleFromStart().cpuDescriptorHandle, _frameIndex, _rtvHeap->getDescriptorSize());;
     auto dsvHandle = _dsvHeap->getDescriptorHandleFromStart().cpuDescriptorHandle;
+
+    // Set descriptor heaps.
+    std::array<ID3D12DescriptorHeap* const, 2u> descriptorHeaps= {
+        _srvHeap->getDescriptorHeap(),
+        _samplerHeap->getDescriptorHeap()
+    };
+    commandList->SetDescriptorHeaps(static_cast<uint32_t>(descriptorHeaps.size()), descriptorHeaps.data());
     
     // Clear targets.
     Util::TransitionResource(commandList, _renderTargets[_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -202,7 +211,7 @@ void Renderer::CreateRenderTargets()
     }
 }
 
-void Renderer::ResizeDepthBuffer()
+void Renderer::CreateDepthBuffer()
 {
     // Flush any GPU commands that might be referencing the depth buffer.
     Flush();

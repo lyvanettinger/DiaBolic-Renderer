@@ -7,6 +7,7 @@
 #include "renderer.hpp"
 #include "camera.hpp"
 #include "descriptor_heap.hpp"
+#include "shader_compiler.hpp"
 
 using namespace Util;
 using namespace Microsoft::WRL;
@@ -24,7 +25,7 @@ GeometryPipeline::~GeometryPipeline()
 
 }
 
-void GeometryPipeline::PopulateCommandlist(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2>& commandList)
+void GeometryPipeline::PopulateCommandlist(const ComPtr<ID3D12GraphicsCommandList2>& commandList)
 {
     // Set necessary stuff.
     commandList->SetPipelineState(_pipelineState.Get());
@@ -34,12 +35,14 @@ void GeometryPipeline::PopulateCommandlist(const Microsoft::WRL::ComPtr<ID3D12Gr
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     commandList->IASetVertexBuffers(0, 1, &_vertexBufferView);
     commandList->IASetIndexBuffer(&_indexBufferView);
-    //commandList->SetGraphicsRootDescriptorTable(1, _renderer._srvHeap->GetGPUDescriptorHandleForHeapStart());
 
-    // Update the MVP matrix
+    // Update the MVP matrix.
     XMMATRIX mvpMatrix = XMMatrixMultiply(_camera->model, _camera->view);
     mvpMatrix = XMMatrixMultiply(mvpMatrix, _camera->projection);
+
+    // Set Root32BitConstants.
     commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
+    commandList->SetGraphicsRoot32BitConstants(1, sizeof(_renderResources) / 4, &_renderResources, 0);
 
     commandList->DrawIndexedInstanced(_indexCount, 1, 0, 0, 0);
 }
@@ -67,48 +70,10 @@ void GeometryPipeline::Update(float deltaTime)
 
 void GeometryPipeline::CreatePipeline()
 {
-    // Create an empty root signature.
-    // https://www.3dgep.com/learning-directx-12-2/#Root_Signatures
-    // A root signature defines the paramteres that are passed to the shader pipeline.
-    // Allow input layout and deny unnecessary access to certain pipeline stages.
-    D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
-        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
-
-    CD3DX12_DESCRIPTOR_RANGE textureDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
-
-    CD3DX12_ROOT_PARAMETER rootParameters[2];
-    rootParameters[0].InitAsConstants(sizeof(DirectX::XMMATRIX) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-    rootParameters[1].InitAsDescriptorTable(1, &textureDescriptorRange, D3D12_SHADER_VISIBILITY_PIXEL);
-
-    CD3DX12_STATIC_SAMPLER_DESC albedoSampler;
-    albedoSampler.Init(0);
-    albedoSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-    CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-    rootSignatureDesc.Init(_countof(rootParameters), rootParameters, 1, &albedoSampler, rootSignatureFlags);
-
-    ComPtr<ID3DBlob> signature;
-    ComPtr<ID3DBlob> error;
-    ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
-    ThrowIfFailed(_renderer._device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
-
-
-    // Create the pipeline state, which includes compiling and loading shaders.
-    ComPtr<ID3DBlob> vertexShader;
-    ComPtr<ID3DBlob> pixelShader;
-
-#if defined(_DEBUG)
-    // Enable better shader debugging with the graphics debugging tools.
-    UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
-    UINT compileFlags = 0;
-#endif
-
-    ThrowIfFailed(D3DCompileFromFile(L"assets/shaders/uber_vs.hlsl", nullptr, nullptr, "main", "vs_5_0", compileFlags, 0, &vertexShader, nullptr));
-    ThrowIfFailed(D3DCompileFromFile(L"assets/shaders/uber_ps.hlsl", nullptr, nullptr, "main", "ps_5_0", compileFlags, 0, &pixelShader, nullptr));
+    // Compile shader(s) and extract root signature
+    const auto& vertexShader = ShaderCompiler::Compile(ShaderTypes::Vertex, L"assets/shaders/uber.hlsl", L"VSMain", true);
+    const auto& pixelShaderBlob = ShaderCompiler::Compile(ShaderTypes::Pixel, L"assets/shaders/uber.hlsl", L"PSMain").shaderBlob;
+    ThrowIfFailed(_renderer._device->CreateRootSignature(0, vertexShader.rootSignatureBlob->GetBufferPointer(), vertexShader.rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&_rootSignature)));
 
     // Define the vertex input layout.
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -118,34 +83,62 @@ void GeometryPipeline::CreatePipeline()
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
     };
 
-    // Describe and create the graphics pipeline state object (PSO).
-    struct PipelineStateStream
-    {
-        CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE pRootSignature;
-        CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT InputLayout;
-        CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY PrimitiveTopologyType;
-        CD3DX12_PIPELINE_STATE_STREAM_VS VS;
-        CD3DX12_PIPELINE_STATE_STREAM_PS PS;
-        CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT DSVFormat;
-        CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS RTVFormats;
-    } pipelineStateStream;
-
-    D3D12_RT_FORMAT_ARRAY rtvFormats = {};
-    rtvFormats.NumRenderTargets = 1;
-    rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-
-    pipelineStateStream.pRootSignature = _rootSignature.Get();
-    pipelineStateStream.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
-    pipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    pipelineStateStream.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
-    pipelineStateStream.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
-    pipelineStateStream.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-    pipelineStateStream.RTVFormats = rtvFormats;
-
-    D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc = {
-        sizeof(PipelineStateStream), &pipelineStateStream
+    // Setup blend descriptions.
+    constexpr D3D12_RENDER_TARGET_BLEND_DESC renderTargetBlendDesc = {
+        .BlendEnable = FALSE,
+        .LogicOpEnable = FALSE,
+        .SrcBlend = D3D12_BLEND_SRC_ALPHA,
+        .DestBlend = D3D12_BLEND_INV_SRC_ALPHA,
+        .BlendOp = D3D12_BLEND_OP_ADD,
+        .SrcBlendAlpha = D3D12_BLEND_ONE,
+        .DestBlendAlpha = D3D12_BLEND_ZERO,
+        .BlendOpAlpha = D3D12_BLEND_OP_ADD,
+        .RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL,
     };
-    ThrowIfFailed(_renderer._device->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&_pipelineState)));
+
+    D3D12_BLEND_DESC blendDesc = {
+        .AlphaToCoverageEnable = FALSE,
+        .IndependentBlendEnable = FALSE,
+    };
+
+    for(uint8_t i = 0; i < FRAME_COUNT; i++)
+    {
+        blendDesc.RenderTarget[i] = renderTargetBlendDesc;
+    }
+
+    // Setup depth stencil state.
+    const D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {
+        .DepthEnable = TRUE,
+        .DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL,
+        .DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL,
+        .StencilEnable = FALSE,
+        .StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK,
+        .StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK,
+    };
+
+    // Setup PSO.
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {
+        .pRootSignature = _rootSignature.Get(),
+        .VS = CD3DX12_SHADER_BYTECODE(vertexShader.shaderBlob->GetBufferPointer(), vertexShader.shaderBlob->GetBufferSize()),
+        .PS = CD3DX12_SHADER_BYTECODE(pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize()),
+        .BlendState = blendDesc,
+        .SampleMask = UINT32_MAX,
+        .RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
+        .DepthStencilState = depthStencilDesc,
+        .InputLayout = { inputElementDescs, _countof(inputElementDescs) },
+        .PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+        .NumRenderTargets = FRAME_COUNT,
+        .DSVFormat = DXGI_FORMAT_D32_FLOAT,
+        .SampleDesc{.Count = 1u, .Quality = 0u},
+        .NodeMask = 0u,
+    };
+
+    for(uint8_t i = 0; i < FRAME_COUNT; i++)
+    {
+        psoDesc.RTVFormats[i] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    }
+
+    ThrowIfFailed(_renderer._device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&_pipelineState)));
 }
 
 void GeometryPipeline::InitializeAssets()
@@ -179,7 +172,6 @@ void GeometryPipeline::InitializeAssets()
 
     // Create the texture.
     ComPtr<ID3D12Resource> intermediateAlbedoBuffer;
-    _albedoTextureHandle = _renderer._srvHeap->getDescriptorHandleFromStart().cpuDescriptorHandle;
     LoadTextureFromFile(_renderer._device, commandList,
         &_albedoTexture, &intermediateAlbedoBuffer,
         L"assets/textures/Utila.jpeg");
@@ -189,8 +181,12 @@ void GeometryPipeline::InitializeAssets()
     _albedoTextureView.Texture2D.PlaneSlice = 0;
     _albedoTextureView.Texture2D.MipLevels = 1;
     _albedoTextureView.Texture2D.MostDetailedMip = 0;
-    _renderer._device->CreateShaderResourceView(_albedoTexture.Get(), &_albedoTextureView, _albedoTextureHandle);
-    _renderer._device->CopyDescriptorsSimple(1, _renderer._srvHeap->getDescriptorHandleFromStart().cpuDescriptorHandle, _albedoTextureHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    // Create the texture SRV
+    _renderResources.albedoTextureIndex = _renderer._srvHeap->getCurrentDescriptorIndex();
+    _albedoTextureHandle = std::make_unique<DescriptorHandle>(_renderer._srvHeap->getCurrentDescriptorHandle());
+    _renderer._device->CreateShaderResourceView(_albedoTexture.Get(), &_albedoTextureView, _albedoTextureHandle->cpuDescriptorHandle);
+    _renderer._srvHeap->offsetCurrentHandle();
 
     // Execute list
     uint64_t fenceValue = _renderer._copyCommandQueue->ExecuteCommandList(commandList);

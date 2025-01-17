@@ -58,7 +58,7 @@ private:
     void InitializeSwapchainResources();
 
 	void CreateRenderTargets();
-	void ResizeDepthBuffer();
+	void CreateDepthBuffer();
 
     // friend classes
     friend class GeometryPipeline;
