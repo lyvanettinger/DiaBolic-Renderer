@@ -67,8 +67,8 @@ void GeometryPipeline::Update(float deltaTime)
 
 void GeometryPipeline::CreatePipeline()
 {
-    const auto& vertexShaderBlob = ShaderCompiler::Compile(ShaderTypes::Vertex, L"assets/shaders/cube_spin.hlsl", L"VSmain").shaderBlob;
-    const auto& pixelShaderBlob = ShaderCompiler::Compile(ShaderTypes::Pixel, L"assets/shaders/cube_spin.hlsl", L"PSmain").shaderBlob;
+    const auto& vertexShaderBlob = ShaderCompiler::Compile(ShaderTypes::Vertex, L"assets/shaders/cube_spin.hlsl", L"VSmain");
+    const auto& pixelShaderBlob = ShaderCompiler::Compile(ShaderTypes::Pixel, L"assets/shaders/cube_spin.hlsl", L"PSmain");
 
     // Setup blend descriptions.
     constexpr D3D12_RENDER_TARGET_BLEND_DESC renderTargetBlendDesc = {
@@ -137,6 +137,7 @@ void GeometryPipeline::InitializeAssets()
     std::vector<uint16_t> cubeIndices;
     CreateCube(cubeVertices, cubeNormals, cubeUVs, cubeIndices, 2.5f);
 
+    
     // Create the positions buffer.
     ComPtr<ID3D12Resource> positionIntermediateBuffer;
     LoadBufferResource(_renderer._device, commandList,
@@ -211,6 +212,7 @@ void GeometryPipeline::InitializeAssets()
         .Format = DXGI_FORMAT_R16_UINT,
     };
 
+
     // Create the texture.
     ComPtr<ID3D12Resource> albedoIntermediateBuffer;
     DXGI_FORMAT format{};
@@ -230,6 +232,7 @@ void GeometryPipeline::InitializeAssets()
           },
     };
     _albedoTexture.srvIndex = _renderer.CreateSrv(textureDesc, _albedoTexture.resource);
+
 
     // Set render resources.
     _renderResources.positionBufferIndex = _positionBuffer.srvIndex;

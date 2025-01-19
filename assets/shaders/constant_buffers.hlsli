@@ -26,3 +26,10 @@ ConstantBufferStruct RenderResources
     uint uvBufferIndex;
     uint textureIndex;
 };
+
+ConstantBufferStruct DialogueBoxResources
+{
+    float4x4 transform;
+    uint positionBufferIndex;
+    uint textureIndex;
+};
