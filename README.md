@@ -11,7 +11,8 @@ Screenshot of the current state:
 - Basic wrappers for command queues and descriptor heaps
 
 #### Future plans:
-- Basic font rendering
+- Model loading (GLTF/fbx)
+- Deferred rendering pipeline with PBR lighting
 
 ## How to build
 
