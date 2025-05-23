@@ -3,18 +3,28 @@
 	"tasks": [
         {
             "type": "shell",
+            "label": "Configure Debug",
+            "command": "cmake --preset x64-debug"
+        },
+        {
+            "type": "shell",
+            "label": "Configure Release",
+            "command": "cmake --preset x64-release"
+        },
+        {
+            "type": "shell",
             "label": "Build Debug",
-            "command": "cmake --preset x64-debug; cmake --build build/x64-debug",
+            "command": "cmake --build build/x64-debug"
         },
         {
             "type": "shell",
             "label": "Build Release",
-            "command": "cmake --preset x64-release; cmake --build build/x64-release",
+            "command": "cmake --build build/x64-release"
         },
         {
             "type": "shell",
             "label": "Clean CMake Cache",
-            "command": "cmake --build build/x64-debug --target clean; cmake --build build/x64-release --target clean",
-        },
+            "command": "cmake --build build/x64-debug --target clean; cmake --build build/x64-release --target clean"
+        }
     ]
 }
