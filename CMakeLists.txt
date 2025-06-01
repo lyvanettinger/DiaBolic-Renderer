@@ -3,7 +3,10 @@
 # Use solution folders to organize projects
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(CMAKE_BUILD_RPATH "$ORIGIN")
+# Make sure DLL and EXE targets go to the same directory.
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/DiaBolic) # Output directory for static lib (.LIB)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/DiaBolic) # Output directory for shared lib (.DLL)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/DiaBolic) # Output directory for executables (.EXE)
 
 project( DialogueBox LANGUAGES CXX )
 
