@@ -1,6 +1,6 @@
 # DiaBolic
 
-A barebones project I made to learn basic DX12 (and eventually font rendering) with. It has set out to become a bit of a framework along the way and I'd like to extend it to make a dummy renderer for any future experimental graphics features I'd like to explore.
+A barebones project I made to learn basic DX12 and CMake with. It has set out to become a bit of a framework along the way and I'd like to extend it to make a dummy renderer for any future experimental graphics features I'd like to explore.
 Screenshot of the current state:
 ![image](https://github.com/user-attachments/assets/2db4957a-383d-4ab9-b6d1-f0192cf01e3e)
 
@@ -14,7 +14,7 @@ Screenshot of the current state:
 - Model loading (GLTF/fbx)
 - Deferred rendering pipeline with PBR lighting
 
-## How to build
+## How to build (vscode)
 
 - Build project with CMake
 - Run Setup.bat
