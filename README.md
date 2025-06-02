@@ -11,7 +11,7 @@ Screenshot of the current state:
 - Basic wrappers for command queues and descriptor heaps
 
 #### Future plans:
-- Model loading (GLTF/fbx)
+- Async/multi-threaded model loading using Assimp
 - Deferred rendering pipeline with PBR lighting
 
 ## How to build (vscode)
