@@ -35,5 +35,8 @@ if( GLFW-CMAKE-STARTER-USE-GLFW-GLAD )
     set( GLAD_GL "${GLFW_SOURCE_DIR}/deps/glad/gl.h" )
 endif()
 
+# Assimp
+add_subdirectory("assimp")
+
 add_library(External INTERFACE)
-target_link_libraries(External INTERFACE DirectXTex glfw ${OPENGL_LIBRARIES} spdlog::spdlog)
+target_link_libraries(External INTERFACE DirectXTex glfw ${OPENGL_LIBRARIES} assimp spdlog::spdlog)

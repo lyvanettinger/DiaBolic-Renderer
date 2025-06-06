@@ -12,12 +12,24 @@ class Renderer
 public:
 	Renderer(std::shared_ptr<Application> app);
 	~Renderer();
-
+    
     void Update(float deltaTime);
 	void Render();
 
-    void Flush();
+    // Getters
+    CommandQueue& GetCopyCommandQueue() { return *_copyCommandQueue; }
+    Microsoft::WRL::ComPtr<ID3D12Device2>& GetDevice() { return _device; }
+    Microsoft::WRL::ComPtr<ID3D12RootSignature>& GetBindlessRootSignature() { return _bindlessRootSignature; }
+    float GetAspectRatio() { return _aspectRatio; }
 
+    [[nodiscard]] uint32_t CreateCbv(const D3D12_CONSTANT_BUFFER_VIEW_DESC& cbvCreationDesc) const;
+	[[nodiscard]] uint32_t CreateSrv(const D3D12_SHADER_RESOURCE_VIEW_DESC& srvCreationDesc, const Microsoft::WRL::ComPtr<ID3D12Resource>& resource) const;
+	[[nodiscard]] uint32_t CreateUav(const D3D12_UNORDERED_ACCESS_VIEW_DESC& uavCreationDesc, const Microsoft::WRL::ComPtr<ID3D12Resource>& resource) const;
+	[[nodiscard]] uint32_t CreateRtv(const D3D12_RENDER_TARGET_VIEW_DESC& rtvCreationDesc, const Microsoft::WRL::ComPtr<ID3D12Resource>& resource) const;
+	[[nodiscard]] uint32_t CreateDsv(const D3D12_DEPTH_STENCIL_VIEW_DESC& dsvCreationDesc, const Microsoft::WRL::ComPtr<ID3D12Resource>& resource) const;
+    
+    void Flush();
+    
 private:
     std::shared_ptr<Application> _app;
     std::shared_ptr<Camera> _camera;
@@ -65,15 +77,5 @@ private:
 	void CreateDepthTarget();
 	void CreateBindlessRootSignature();
 
-	[[nodiscard]] uint32_t CreateCbv(const D3D12_CONSTANT_BUFFER_VIEW_DESC& cbvCreationDesc) const;
-	[[nodiscard]] uint32_t CreateSrv(const D3D12_SHADER_RESOURCE_VIEW_DESC& srvCreationDesc, const Microsoft::WRL::ComPtr<ID3D12Resource>& resource) const;
-	[[nodiscard]] uint32_t CreateUav(const D3D12_UNORDERED_ACCESS_VIEW_DESC& uavCreationDesc, const Microsoft::WRL::ComPtr<ID3D12Resource>& resource) const;
-	[[nodiscard]] uint32_t CreateRtv(const D3D12_RENDER_TARGET_VIEW_DESC& rtvCreationDesc, const Microsoft::WRL::ComPtr<ID3D12Resource>& resource) const;
-	[[nodiscard]] uint32_t CreateDsv(const D3D12_DEPTH_STENCIL_VIEW_DESC& dsvCreationDesc, const Microsoft::WRL::ComPtr<ID3D12Resource>& resource) const;
-
 	void SetDescriptorHeaps(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2>& commandList) const;
-
-    // friend classes
-    friend class GeometryPipeline;
-    friend class UIPipeline;
 };

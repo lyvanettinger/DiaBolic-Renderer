@@ -7,6 +7,7 @@ set( HEADER_FILES
 	inc/dialogue_sample.hpp
 	inc/glfw_app.hpp
 	inc/renderer.hpp
+	inc/resources.hpp
 	inc/utility/d3dx12.h
 	inc/utility/dx12_helpers.hpp
 	inc/utility/log.hpp
@@ -26,6 +27,7 @@ set( SRC_FILES
 	src/pch.h
 	src/pch.cpp
 	src/renderer.cpp
+	src/resources.cpp
 	src/utility/dx12_helpers.cpp
 	src/utility/resource_util.cpp
 	src/utility/shader_compiler.cpp

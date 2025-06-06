@@ -2,23 +2,6 @@
 
 namespace Util
 {
-	struct Buffer
-	{
-		Microsoft::WRL::ComPtr<ID3D12Resource> resource{};
-
-		uint32_t srvIndex{};
-		uint32_t uavIndex{};
-		uint32_t cbvIndex{};
-	};
-
-	struct Texture
-	{
-		Microsoft::WRL::ComPtr<ID3D12Resource> resource{};
-
-		uint32_t srvIndex{};
-		uint32_t uavIndex{};
-	};
-
 	void CreateCube(std::vector<DirectX::XMFLOAT3>& vertices,
 		std::vector<DirectX::XMFLOAT3>& normals,
 		std::vector<DirectX::XMFLOAT2>& uvs,

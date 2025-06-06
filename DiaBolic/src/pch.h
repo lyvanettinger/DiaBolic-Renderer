@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <array>
+#include <mutex>
 
 // program specific
 #define FRAME_COUNT 2
