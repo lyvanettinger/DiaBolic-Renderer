@@ -16,7 +16,6 @@ FetchContent_MakeAvailable(SpdLog)
 
 # Make sure cmake can find vcpkg installed packages
 include($ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
-list(APPEND CMAKE_PREFIX_PATH $ENV{VCPKG_ROOT}/packages)
 
 # DirectXMath
 find_package(DirectXMath CONFIG REQUIRED)

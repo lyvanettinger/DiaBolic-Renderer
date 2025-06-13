@@ -25,7 +25,7 @@ struct Mesh
     Buffer uvBuffer{};
     Buffer indexBuffer{};
 
-    D3D12_INDEX_BUFFER_VIEW GetIndexBufferView();
+    D3D12_INDEX_BUFFER_VIEW indexBufferView{};
     DXGI_FORMAT indexType{};
 
     uint32_t materialIndex{};

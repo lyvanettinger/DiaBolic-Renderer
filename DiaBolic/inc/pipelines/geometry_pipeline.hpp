@@ -1,10 +1,9 @@
 #pragma once
 
+#include "resources.hpp"
+
 class Renderer;
-class Model;
 struct Camera;
-struct Buffer;
-struct Texture;
 
 class GeometryPipeline
 {

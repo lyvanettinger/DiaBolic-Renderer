@@ -1,5 +1,8 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
+# Set W4
+string(REGEX REPLACE "/W[0-9]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
 # Use solution folders to organize projects
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 

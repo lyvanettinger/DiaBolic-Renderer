@@ -34,7 +34,7 @@ void Util::GetHardwareAdapter(
 
             // Check to see whether the adapter supports Direct3D 12, but don't create the
             // actual device yet.
-            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr)))
+            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)))
             {
                 break;
             }
@@ -57,7 +57,7 @@ void Util::GetHardwareAdapter(
 
             // Check to see whether the adapter supports Direct3D 12, but don't create the
             // actual device yet.
-            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr)))
+            if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)))
             {
                 break;
             }

@@ -13,7 +13,7 @@
 
 #pragma warning(push)
 #pragma warning(disable : 4324)
-#include "d3dx12.h"
+#include "utility/d3dx12.h"
 #pragma warning(pop)
 
 // GLFW

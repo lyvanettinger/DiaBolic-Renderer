@@ -49,7 +49,7 @@ void CommandQueue::WaitForFenceValue(uint64_t fenceValue)
     if (!IsFenceComplete(fenceValue))
     {
         _fence->SetEventOnCompletion(fenceValue, _fenceEvent);
-        ::WaitForSingleObject(_fenceEvent, DWORD_MAX);
+        ::WaitForSingleObject(_fenceEvent, UINT_MAX);
     }
 }
 

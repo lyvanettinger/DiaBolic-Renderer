@@ -2,7 +2,7 @@
 
 #include "renderer.hpp"
 #include "camera.hpp"
-#include "log.hpp"
+#include "utility/log.hpp"
 
 #ifndef _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
@@ -20,15 +20,15 @@ void Model::Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2>& comma
 {
     for(auto mesh : _meshes)
     {
-        commandList.IASetIndexBuffer(&mesh->GetIndexBufferView());
+        commandList->IASetIndexBuffer(&mesh->indexBufferView);
 
         // Update the MVP matrix
         XMMATRIX mvpMatrix = XMMatrixMultiply(camera->model, camera->view);
         mvpMatrix = XMMatrixMultiply(mvpMatrix, camera->projection);
         mesh->renderResources.MVP = mvpMatrix;
-        commandList.SetGraphicsRoot32BitConstants(0, 64, &mesh->renderResources, 0);
+        commandList->SetGraphicsRoot32BitConstants(0, 64, &mesh->renderResources, 0);
 
-        commandList.DrawIndexedInstanced(mesh->indexCount, 1, 0, 0, 0);
+        commandList->DrawIndexedInstanced(mesh->indexCount, 1, 0, 0, 0);
     }
 }
 
@@ -73,27 +73,27 @@ void Model::ProcessNode(const aiScene& scene, aiNode& node)
 
 std::shared_ptr<Mesh> Model::ProcessMesh(const aiScene& scene, aiMesh& mesh)
 {
-
+    return std::make_shared<Mesh>();
 }
 
 std::shared_ptr<Material> Model::ProcessMaterial(aiMaterial& material)
 {
-    
+    return std::make_shared<Material>();
 }
 
-D3D12_INDEX_BUFFER_VIEW Mesh::GetIndexBufferView()
-{
-    D3D12_INDEX_BUFFER_VIEW indexBufferView;
-    indexBufferView.BufferLocation = indexBuffer.resource->GetGPUVirtualAddress();
-    indexBufferView.Format = indexType;
+// D3D12_INDEX_BUFFER_VIEW Mesh::GetIndexBufferView()
+// {
+//     D3D12_INDEX_BUFFER_VIEW indexBufferView;
+//     indexBufferView.BufferLocation = indexBuffer.resource->GetGPUVirtualAddress();
+//     indexBufferView.Format = indexType;
 
-    switch(indexType)
-    {
-    case DXGI_FORMAT_R16_UINT:
-    default:
-        indexBufferView.SizeInBytes = static_cast<UINT>(indexCount * sizeof(uint16_t));
-        break;
-    }
+//     switch(indexType)
+//     {
+//     case DXGI_FORMAT_R16_UINT:
+//     default:
+//         indexBufferView.SizeInBytes = static_cast<UINT>(indexCount * sizeof(uint16_t));
+//         break;
+//     }
 
-    return indexBufferView;
-}
+//     return indexBufferView;
+// }

@@ -1,6 +1,7 @@
 #include "utility/resource_util.hpp"
 
 #include "utility/dx12_helpers.hpp"
+#include "utility/log.hpp"
 
 #ifndef _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
@@ -122,7 +123,8 @@ void Util::LoadTextureFromFile(
     fs::path filePath(fileName);
     if (!exists(filePath))
     {
-        throw std::exception("File not found.");
+        dblog::error("File not found.");
+        return;
     }
 
     DirectX::TexMetadata metadata;
@@ -183,7 +185,8 @@ void Util::LoadTextureFromFile(
             static_cast<UINT16>(metadata.depth));
         break;
     default:
-        throw std::exception("Invalid texture dimension.");
+        dblog::error("Invalid texture dimension.");
+        return;
     }
     format = metadata.format;
     
