@@ -14,8 +14,15 @@ FetchContent_MakeAvailable(SpdLog)
 
 ## SUB DIRECTORIES
 
+# Make sure cmake can find vcpkg installed packages
+include($ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
+list(APPEND CMAKE_PREFIX_PATH $ENV{VCPKG_ROOT}/packages)
+
+# DirectXMath
+find_package(DirectXMath CONFIG REQUIRED)
+
 # DirectXTex
-add_subdirectory("DirectXTex")
+find_package(DirectXTex CONFIG REQUIRED)
 
 # GLFW
 find_package( OpenGL REQUIRED )
@@ -39,4 +46,4 @@ endif()
 add_subdirectory("assimp")
 
 add_library(External INTERFACE)
-target_link_libraries(External INTERFACE DirectXTex glfw ${OPENGL_LIBRARIES} assimp spdlog::spdlog)
+target_link_libraries(External INTERFACE Microsoft::DirectXTex Microsoft::DirectXMath glfw ${OPENGL_LIBRARIES} assimp spdlog::spdlog)

@@ -3,11 +3,6 @@
 	"tasks": [
         {
             "type": "shell",
-            "label": "Configure Debug",
-            "command": "cmake --preset x64-debug"
-        },
-        {
-            "type": "shell",
             "label": "Configure Release",
             "command": "cmake --preset x64-release"
         },

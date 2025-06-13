@@ -2,6 +2,7 @@
 build
 external/DirectXAgilitySDK
 external/DirectXShaderCompiler
+external/vcpkg_installed
 *.zip
 
 ### C++ ###

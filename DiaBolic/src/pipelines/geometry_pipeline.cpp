@@ -35,6 +35,17 @@ void GeometryPipeline::PopulateCommandlist(const Microsoft::WRL::ComPtr<ID3D12Gr
     // Start recording.
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+    commandList->IASetIndexBuffer(&_indexBufferView);
+
+    // Update the MVP matrix
+    DirectX::XMMATRIX mvpMatrix = DirectX::XMMatrixMultiply(_camera->model, _camera->view);
+    mvpMatrix = XMMatrixMultiply(mvpMatrix, _camera->projection);
+    _renderResources.MVP = mvpMatrix;
+    commandList->SetGraphicsRoot32BitConstants(0, 64, &_renderResources, 0);
+
+    commandList->DrawIndexedInstanced(_indexCount, 1, 0, 0, 0);
+
+    // TODO: make this work
     for(auto& model : _models)
     {
         model.Draw(commandList, _camera);
@@ -128,113 +139,113 @@ void GeometryPipeline::InitializeAssets()
 {
     auto commandList = _renderer.GetCopyCommandQueue().GetCommandList();
 
-    _models.emplace_back(Model("Sting/Sting-Sword lowpoly.fbx"));
+    //_models.emplace_back(Model("Sting/Sting-Sword lowpoly.fbx"));
 
-    // std::vector<XMFLOAT3> cubeVertices;
-    // std::vector<XMFLOAT3> cubeNormals;
-    // std::vector<XMFLOAT2> cubeUVs;
-    // std::vector<uint16_t> cubeIndices;
-    // CreateCube(cubeVertices, cubeNormals, cubeUVs, cubeIndices, 2.5f);
+    std::vector<XMFLOAT3> cubeVertices;
+    std::vector<XMFLOAT3> cubeNormals;
+    std::vector<XMFLOAT2> cubeUVs;
+    std::vector<uint16_t> cubeIndices;
+    CreateCube(cubeVertices, cubeNormals, cubeUVs, cubeIndices, 2.5f);
 
-    // // Create the positions buffer.
-    // ComPtr<ID3D12Resource> positionIntermediateBuffer;
-    // LoadBufferResource(_renderer.GetDevice(), commandList,
-    //     &_positionBuffer.resource, &positionIntermediateBuffer,
-    //     cubeVertices.size(), sizeof(XMFLOAT3), cubeVertices.data());
-    // _positionBuffer.resource->SetName(L"Cube Positions");
+    // Create the positions buffer.
+    ComPtr<ID3D12Resource> positionIntermediateBuffer;
+    LoadBufferResource(_renderer.GetDevice(), commandList,
+        &_positionBuffer.resource, &positionIntermediateBuffer,
+        cubeVertices.size(), sizeof(XMFLOAT3), cubeVertices.data());
+    _positionBuffer.resource->SetName(L"Cube Positions");
 
-    // const D3D12_SHADER_RESOURCE_VIEW_DESC positionDesc = {
-    //     .Format = DXGI_FORMAT_UNKNOWN,
-    //     .ViewDimension = D3D12_SRV_DIMENSION_BUFFER,
-    //     .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-    //     .Buffer = {
-    //         .FirstElement = 0u,
-    //         .NumElements = static_cast<UINT>(cubeVertices.size()),
-    //         .StructureByteStride = static_cast<UINT>(sizeof(XMFLOAT3)),
-    //       },
-    // };
-    // _positionBuffer.srvIndex = _renderer.CreateSrv(positionDesc, _positionBuffer.resource);
-
-
-    // // Create the normals buffer.
-    // ComPtr<ID3D12Resource> normalsIntermediateBuffer;
-    // LoadBufferResource(_renderer.GetDevice(), commandList,
-    //     &_normalBuffer.resource, &normalsIntermediateBuffer,
-    //     cubeNormals.size(), sizeof(XMFLOAT3), cubeNormals.data());
-    // _normalBuffer.resource->SetName(L"Cube Normals");
-
-    // const D3D12_SHADER_RESOURCE_VIEW_DESC normalsDesc = {
-    //     .Format = DXGI_FORMAT_UNKNOWN,
-    //     .ViewDimension = D3D12_SRV_DIMENSION_BUFFER,
-    //     .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-    //     .Buffer = {
-    //         .FirstElement = 0u,
-    //         .NumElements = static_cast<UINT>(cubeNormals.size()),
-    //         .StructureByteStride = static_cast<UINT>(sizeof(XMFLOAT3)),
-    //       },
-    // };
-    // _normalBuffer.srvIndex = _renderer.CreateSrv(normalsDesc, _normalBuffer.resource);
+    const D3D12_SHADER_RESOURCE_VIEW_DESC positionDesc = {
+        .Format = DXGI_FORMAT_UNKNOWN,
+        .ViewDimension = D3D12_SRV_DIMENSION_BUFFER,
+        .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+        .Buffer = {
+            .FirstElement = 0u,
+            .NumElements = static_cast<UINT>(cubeVertices.size()),
+            .StructureByteStride = static_cast<UINT>(sizeof(XMFLOAT3)),
+          },
+    };
+    _positionBuffer.srvIndex = _renderer.CreateSrv(positionDesc, _positionBuffer.resource);
 
 
-    // // Create the uvs buffer.
-    // ComPtr<ID3D12Resource> uvIntermediateBuffer;
-    // LoadBufferResource(_renderer.GetDevice(), commandList,
-    //     &_uvBuffer.resource, &uvIntermediateBuffer,
-    //     cubeUVs.size(), sizeof(XMFLOAT2), cubeUVs.data());
-    // _uvBuffer.resource->SetName(L"Cube UVs");
+    // Create the normals buffer.
+    ComPtr<ID3D12Resource> normalsIntermediateBuffer;
+    LoadBufferResource(_renderer.GetDevice(), commandList,
+        &_normalBuffer.resource, &normalsIntermediateBuffer,
+        cubeNormals.size(), sizeof(XMFLOAT3), cubeNormals.data());
+    _normalBuffer.resource->SetName(L"Cube Normals");
 
-    // const D3D12_SHADER_RESOURCE_VIEW_DESC uvDesc = {
-    //     .Format = DXGI_FORMAT_UNKNOWN,
-    //     .ViewDimension = D3D12_SRV_DIMENSION_BUFFER,
-    //     .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-    //     .Buffer = {
-    //         .FirstElement = 0u,
-    //         .NumElements = static_cast<UINT>(cubeUVs.size()),
-    //         .StructureByteStride = static_cast<UINT>(sizeof(XMFLOAT2)),
-    //       },
-    // };
-    // _uvBuffer.srvIndex = _renderer.CreateSrv(uvDesc, _uvBuffer.resource);
+    const D3D12_SHADER_RESOURCE_VIEW_DESC normalsDesc = {
+        .Format = DXGI_FORMAT_UNKNOWN,
+        .ViewDimension = D3D12_SRV_DIMENSION_BUFFER,
+        .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+        .Buffer = {
+            .FirstElement = 0u,
+            .NumElements = static_cast<UINT>(cubeNormals.size()),
+            .StructureByteStride = static_cast<UINT>(sizeof(XMFLOAT3)),
+          },
+    };
+    _normalBuffer.srvIndex = _renderer.CreateSrv(normalsDesc, _normalBuffer.resource);
 
 
-    // // Create the index buffer.
-    // ComPtr<ID3D12Resource> indexIntermediateBuffer;
-    // LoadBufferResource(_renderer.GetDevice(), commandList,
-    //     &_indexBuffer, &indexIntermediateBuffer,
-    //     cubeIndices.size(), sizeof(uint16_t), cubeIndices.data());
-    // _indexCount = static_cast<uint32_t>(cubeIndices.size());
-    // _indexBuffer->SetName(L"Cube Indices");
+    // Create the uvs buffer.
+    ComPtr<ID3D12Resource> uvIntermediateBuffer;
+    LoadBufferResource(_renderer.GetDevice(), commandList,
+        &_uvBuffer.resource, &uvIntermediateBuffer,
+        cubeUVs.size(), sizeof(XMFLOAT2), cubeUVs.data());
+    _uvBuffer.resource->SetName(L"Cube UVs");
 
-    // _indexBufferView = {
-    //     .BufferLocation = _indexBuffer->GetGPUVirtualAddress(),
-    //     .SizeInBytes = static_cast<UINT>(_indexCount * sizeof(uint16_t)),
-    //     .Format = DXGI_FORMAT_R16_UINT,
-    // };
+    const D3D12_SHADER_RESOURCE_VIEW_DESC uvDesc = {
+        .Format = DXGI_FORMAT_UNKNOWN,
+        .ViewDimension = D3D12_SRV_DIMENSION_BUFFER,
+        .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+        .Buffer = {
+            .FirstElement = 0u,
+            .NumElements = static_cast<UINT>(cubeUVs.size()),
+            .StructureByteStride = static_cast<UINT>(sizeof(XMFLOAT2)),
+          },
+    };
+    _uvBuffer.srvIndex = _renderer.CreateSrv(uvDesc, _uvBuffer.resource);
 
-    // // Create the texture.
-    // ComPtr<ID3D12Resource> albedoIntermediateBuffer;
-    // DXGI_FORMAT format{};
-    // LoadTextureFromFile(_renderer.GetDevice(), commandList,
-    //     &_albedoTexture.resource, &albedoIntermediateBuffer,
-    //     L"assets/textures/Utila.jpeg", format);
-    // _albedoTexture.resource->SetName(L"Utila.jpeg");
 
-    // const D3D12_SHADER_RESOURCE_VIEW_DESC textureDesc = {
-    //     .Format = format,
-    //     .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
-    //     .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-    //     .Texture2D = {
-    //         .MostDetailedMip = 0u,
-    //         .MipLevels = 1u,
-    //         .PlaneSlice = 0u,
-    //       },
-    // };
-    // _albedoTexture.srvIndex = _renderer.CreateSrv(textureDesc, _albedoTexture.resource);
+    // Create the index buffer.
+    ComPtr<ID3D12Resource> indexIntermediateBuffer;
+    LoadBufferResource(_renderer.GetDevice(), commandList,
+        &_indexBuffer, &indexIntermediateBuffer,
+        cubeIndices.size(), sizeof(uint16_t), cubeIndices.data());
+    _indexCount = static_cast<uint32_t>(cubeIndices.size());
+    _indexBuffer->SetName(L"Cube Indices");
 
-    // // Set render resources.
-    // _renderResources.positionBufferIndex = _positionBuffer.srvIndex;
-    // _renderResources.normalBufferIndex = _normalBuffer.srvIndex;
-    // _renderResources.uvBufferIndex = _uvBuffer.srvIndex;
-    // _renderResources.textureIndex = _albedoTexture.srvIndex;
+    _indexBufferView = {
+        .BufferLocation = _indexBuffer->GetGPUVirtualAddress(),
+        .SizeInBytes = static_cast<UINT>(_indexCount * sizeof(uint16_t)),
+        .Format = DXGI_FORMAT_R16_UINT,
+    };
+
+    // Create the texture.
+    ComPtr<ID3D12Resource> albedoIntermediateBuffer;
+    DXGI_FORMAT format{};
+    LoadTextureFromFile(_renderer.GetDevice(), commandList,
+        &_albedoTexture.resource, &albedoIntermediateBuffer,
+        L"assets/textures/Utila.jpeg", format);
+    _albedoTexture.resource->SetName(L"Utila.jpeg");
+
+    const D3D12_SHADER_RESOURCE_VIEW_DESC textureDesc = {
+        .Format = format,
+        .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
+        .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+        .Texture2D = {
+            .MostDetailedMip = 0u,
+            .MipLevels = 1u,
+            .PlaneSlice = 0u,
+          },
+    };
+    _albedoTexture.srvIndex = _renderer.CreateSrv(textureDesc, _albedoTexture.resource);
+
+    // Set render resources.
+    _renderResources.positionBufferIndex = _positionBuffer.srvIndex;
+    _renderResources.normalBufferIndex = _normalBuffer.srvIndex;
+    _renderResources.uvBufferIndex = _uvBuffer.srvIndex;
+    _renderResources.textureIndex = _albedoTexture.srvIndex;
 
     // Execute list
     uint64_t fenceValue = _renderer.GetCopyCommandQueue().ExecuteCommandList(commandList);
