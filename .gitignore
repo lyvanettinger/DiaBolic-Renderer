@@ -3,13 +3,6 @@ build
 vcpkg_installed
 *.zip
 
-# vcpkg build artifacts
-/vcpkg/buildtrees/
-/vcpkg/packages/
-/vcpkg/installed/
-/vcpkg/downloads/
-/vcpkg/vcpkg
-
 ### C++ ###
 # Prerequisites
 *.d
