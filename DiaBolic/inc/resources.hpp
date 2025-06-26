@@ -6,58 +6,60 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+class Renderer;
 class Model;
 struct Camera;
 
 struct Buffer
 {
-    Microsoft::WRL::ComPtr<ID3D12Resource> resource{};
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource = NULL;
 
-    uint32_t srvIndex{};
-    uint32_t uavIndex{};
-    uint32_t cbvIndex{};
+    uint32_t srvIndex = 0;
+    uint32_t uavIndex = 0;
+    uint32_t cbvIndex = 0;
 };
 
 class Mesh
 {
 public:
-    Mesh(std::vector<DirectX::XMFLOAT3> positions, std::vector<DirectX::XMFLOAT3> normals, std::vector<DirectX::XMFLOAT2> uvs, std::vector<uint16_t> indices);
-    ~Mesh() { };
+    Mesh(Renderer& renderer, std::vector<DirectX::XMFLOAT3> positions, std::vector<DirectX::XMFLOAT3> normals, std::vector<DirectX::XMFLOAT2> uvs, std::vector<uint16_t> indices, unsigned int materialIndex);
+    ~Mesh() { }
 
-    D3D12_INDEX_BUFFER_VIEW const& GetIndexBufferView() const { return indexBufferView; }
-    RenderResources const& GetRenderResources() const { return renderResources; }
-    uint32_t const& GetIndexCount() const { return indexCount; }
+    uint32_t const& GetPositionBufferSRVIndex() { return _positionBuffer.srvIndex; }
+    uint32_t const& GetNormalBufferSRVIndex() { return _normalBuffer.srvIndex; }
+    uint32_t const& GetUVBufferSRVIndex() { return _uvBuffer.srvIndex; }
 
-    void SetMVP(DirectX::XMMATRIX mvp) { renderResources.MVP = mvp; }
+    D3D12_INDEX_BUFFER_VIEW const& GetIndexBufferView() const { return _indexBufferView; }
+    uint32_t const& GetIndexCount() const { return _indexCount; }
+    uint32_t const& GetMaterialIndex() const { return _materialIndex; }
 
 private:
-    std::vector<DirectX::XMFLOAT3> positions;
-    std::vector<DirectX::XMFLOAT3> normals;
-    std::vector<DirectX::XMFLOAT2> uvs;
-    std::vector<uint16_t> indices;
+    Buffer _positionBuffer;
+    Buffer _normalBuffer;
+    Buffer _uvBuffer;
+    Buffer _indexBuffer;
 
-    Buffer positionBuffer{};
-    Buffer normalBuffer{};
-    Buffer uvBuffer{};
-    Buffer indexBuffer{};
+    D3D12_INDEX_BUFFER_VIEW _indexBufferView{};
+    DXGI_FORMAT _indexType = DXGI_FORMAT_R16_UINT;
 
-    D3D12_INDEX_BUFFER_VIEW indexBufferView{};
-    DXGI_FORMAT indexType{};
-
-    uint32_t materialIndex{};
-    uint32_t indexCount{};
-    uint32_t vertexCount{};
-
-    RenderResources renderResources;
+    uint32_t _materialIndex = 0;
+    uint32_t _indexCount = 0;
+    uint32_t _vertexCount = 0;
 };
 
 struct Texture
 {
-    Microsoft::WRL::ComPtr<ID3D12Resource> resource{};
+    Texture(Renderer& renderer, std::string path);
+    ~Texture() { }
 
-    uint32_t srvIndex{};
-    uint32_t uavIndex{};
+    Microsoft::WRL::ComPtr<ID3D12Resource> resource = NULL;
 
+    uint32_t srvIndex = 0;
+    uint32_t uavIndex = 0;
+
+    std::string name = "";
+
+    // TODO: get this somewhere.. or not
     int width = 0;
     int height = 0;
     int channels = 0;
@@ -84,29 +86,33 @@ struct Material
     bool isUnlit = false;  // 4
     bool recieveShadows = true;
 
-    std::shared_ptr<Texture> baseColorTexture = nullptr;
-    std::shared_ptr<Texture> emissiveTexture = nullptr;
-    std::shared_ptr<Texture> normalTexture = nullptr;
-    std::shared_ptr<Texture> occlusionTexture = nullptr;
-    std::shared_ptr<Texture> metallicRoughnessTexture = nullptr;
+    uint32_t baseColorTextureIndex = 0;
+    uint32_t emissiveTextureIndex = 0;
+    uint32_t normalTextureIndex = 0;
+    uint32_t occlusionTextureIndex = 0;
+    uint32_t metallicRoughnessTextureIndex = 0;
+
+    std::string name = "";
 };
 
 class Model
 {
 public:
-    Model(const std::string& fileName);
+    Model(Renderer& renderer, const std::string& fileName);
 
     void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2>& commandList, const std::shared_ptr<Camera> camera);
 
 private:
-    void LoadModel(const std::string& filePath);
-    void ProcessNode(const aiScene& scene, aiNode& node);
-    std::shared_ptr<Mesh> ProcessMesh(aiMesh& mesh);
-    std::shared_ptr<Material> ProcessMaterial(aiMaterial& material);
+    void LoadModel(Renderer& renderer, const std::string& filePath);
+    void ProcessNode(Renderer& renderer, const aiScene& scene, aiNode& node);
+    void ProcessMesh(Renderer& renderer, aiMesh& mesh);
+    void ProcessMaterial(Renderer& renderer, aiMaterial& material);
+    uint32_t LoadMaterialTexture(Renderer& renderer, aiMaterial& material, aiTextureType type);
 
     std::vector<std::shared_ptr<Mesh>> _meshes;
     std::vector<std::shared_ptr<Material>> _materials;
+    std::vector<std::shared_ptr<Texture>> _textures;
     // TODO: implement hierarchical scene/node structure
 
-    std::string _directory;
+    std::string _directory = "";
 };

@@ -3,12 +3,9 @@
 #include "utility/dx12_helpers.hpp"
 #include "utility/log.hpp"
 
-#ifndef _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#endif
-#include <experimental/filesystem>
+#include <filesystem>
 
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 void Util::CreateCube(
     std::vector<DirectX::XMFLOAT3>& vertices,
@@ -121,7 +118,7 @@ void Util::LoadTextureFromFile(
     const std::wstring& fileName, DXGI_FORMAT& format)
 {
     fs::path filePath(fileName);
-    if (!exists(filePath))
+    if (!fs::exists(filePath))
     {
         dblog::error("File not found.");
         return;

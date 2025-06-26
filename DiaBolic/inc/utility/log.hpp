@@ -18,4 +18,10 @@ namespace Util
     {
         return wStringToString(std::wstring(wide));
     }
+
+    inline std::wstring StringTowString(const std::string& str) 
+    {
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+        return converter.from_bytes(str);
+    }
 }

@@ -1,39 +1,7 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
-set( HEADER_FILES
-	inc/camera.hpp
-	inc/command_queue.hpp
-	inc/descriptor_heap.hpp
-	inc/dialogue_sample.hpp
-	inc/glfw_app.hpp
-	inc/renderer.hpp
-	inc/resources.hpp
-	inc/utility/d3dx12.h
-	inc/utility/dx12_helpers.hpp
-	inc/utility/log.hpp
-	inc/utility/resource_util.hpp
-	inc/utility/shader_compiler.hpp
-	inc/pipelines/geometry_pipeline.hpp
-	inc/pipelines/ui_pipeline.hpp
-)
-
-set( SRC_FILES
-	src/camera.cpp
-	src/command_queue.cpp
-	src/descriptor_heap.cpp
-	src/dialogue_sample.cpp
-	src/glfw_app.cpp
-	src/main.cpp
-	src/pch.h
-	src/pch.cpp
-	src/renderer.cpp
-	src/resources.cpp
-	src/utility/dx12_helpers.cpp
-	src/utility/resource_util.cpp
-	src/utility/shader_compiler.cpp
-	src/pipelines/geometry_pipeline.cpp
-	src/pipelines/ui_pipeline.cpp
-)
+file(GLOB_RECURSE SRC_FILES src/*.cpp)
+file(GLOB_RECURSE HEADER_FILES inc/*.hpp)
 
 add_executable( DiaBolic
     ${HEADER_FILES}
