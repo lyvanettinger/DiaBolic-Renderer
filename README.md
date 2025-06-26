@@ -14,13 +14,34 @@ Screenshot of the current state:
 - Async/multi-threaded model loading using Assimp
 - Deferred rendering pipeline with PBR lighting
 
-## How to build (vscode)
+## Getting started
 
-- Build project with CMake
-- Run Setup.bat
+### Prerequisites
+Make sure to have these installed:
+- Visual Studio Code
+- CMake
+- MSVC compiler
+- Ninja
+- Git
+VS Code Extensions:
+- CMake Tools
+- C++ Externsion
 
-If the compiler is complaining about git submodules, run
-`git submodule update --init --recursive`.
+### One-Time Setup 
+Run the following commands in the project root's terminal:
+- `git submodule update --init --recursive`
+- `.\vcpkg\bootstrap-vcpkg.bat`
+- `.\vcpkg\vcpkg install`
+
+### Running the Project in VS Code
+- `Ctrl+Shift+P` -> CMake: Select Configure Preset, then choose: x64 Debug or x64 Release
+- `Ctrl+Shift+P` -> CMake: Configure
+- `Ctrl+Shift+P` -> CMake: Build
+- `Ctrl+Shift+D` -> Launch Debug or Launch Release
+
+### Updating Dependencies
+If you add new dependencies to `vcpkg.json`, rerun: 
+- `.\vcpkg\vcpkg install`
 
 ## Learning resources
 Some of the most notable learning resources and references used:
