@@ -15,7 +15,6 @@ Screenshot of the current state:
 - Deferred rendering pipeline with PBR lighting
 
 ## Getting started
-
 ### Prerequisites
 Make sure to have these installed:
 - Visual Studio Code
@@ -40,8 +39,7 @@ Run the following commands in the project root's terminal:
 - `Ctrl+Shift+D` -> Launch Debug or Launch Release
 
 ### Updating Dependencies
-If you add new dependencies to `vcpkg.json`, rerun: 
-- `.\vcpkg\vcpkg install`
+If you add new dependencies to `vcpkg.json`, rerun `.\vcpkg\vcpkg install`
 
 ## Learning resources
 Some of the most notable learning resources and references used:
