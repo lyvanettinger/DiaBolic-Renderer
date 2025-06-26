@@ -50,6 +50,7 @@ private:
 struct Texture
 {
     Texture(Renderer& renderer, std::string path);
+    Texture(Renderer& renderer, aiTexture textureData);
     ~Texture() { }
 
     Microsoft::WRL::ComPtr<ID3D12Resource> resource = NULL;

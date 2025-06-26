@@ -141,18 +141,18 @@ void Model::ProcessMesh(Renderer& renderer, aiMesh& mesh)
 
 uint32_t Model::LoadMaterialTexture(Renderer& renderer, aiMaterial& material, aiTextureType type)
 {
-    // TODO: can there be more than one material texture per type ?!?!?!??!
-    for(uint32_t i = 0; i < material.GetTextureCount(type); ++i)
+    // check if material has this type of texture
+    if(material.GetTextureCount(type) > 0)
     {
         aiString str;
-        material.GetTexture(type, i, &str);
+        material.GetTexture(type, 0, &str);
         // check if already loaded
-        for(uint32_t j = 0; j < _textures.size(); ++j)
+        for(uint32_t i = 0; i < _textures.size(); ++i)
         {
-            if(std::strcmp(_textures[j]->name.data(), str.C_Str()) == 0)
+            if(std::strcmp(_textures[i]->name.data(), str.C_Str()) == 0)
             {
                 dblog::info("[LOAD_MATERIAL_TEXTURE] Texture {0} already exists.", str.C_Str());
-                return j;
+                return i;
             }
         }
         // add to vector when not found
@@ -313,4 +313,9 @@ Texture::Texture(Renderer& renderer, std::string path)
     // Execute list
     uint64_t fenceValue = renderer.GetCopyCommandQueue().ExecuteCommandList(commandList);
     renderer.GetCopyCommandQueue().WaitForFenceValue(fenceValue);
+}
+
+Texture::Texture(Renderer& renderer, aiTexture textureData)
+{
+    
 }

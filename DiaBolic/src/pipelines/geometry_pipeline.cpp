@@ -35,17 +35,7 @@ void GeometryPipeline::PopulateCommandlist(const Microsoft::WRL::ComPtr<ID3D12Gr
     // Start recording.
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    //commandList->IASetIndexBuffer(&_indexBufferView);
-
-    // Update the MVP matrix
-    //DirectX::XMMATRIX mvpMatrix = DirectX::XMMatrixMultiply(_camera->model, _camera->view);
-    //mvpMatrix = XMMatrixMultiply(mvpMatrix, _camera->projection);
-    //_renderResources.MVP = mvpMatrix;
-    //commandList->SetGraphicsRoot32BitConstants(0, 64, &_renderResources, 0);
-
-    //commandList->DrawIndexedInstanced(_indexCount, 1, 0, 0, 0);
-
-    // TODO: make this work
+    // Render models
     for(auto& model : _models)
     {
         model.Draw(commandList, _camera);
@@ -137,6 +127,6 @@ void GeometryPipeline::CreatePipeline()
 
 void GeometryPipeline::InitializeAssets()
 {
-    //_models.emplace_back(Model(_renderer, "Sting/Sting-Sword lowpoly.fbx"));
-    _models.emplace_back(Model(_renderer, "Fish/BarramundiFish.gltf"));
+    //_models.emplace_back(Model(_renderer, "Fish/BarramundiFish.gltf"));
+    _models.emplace_back(Model(_renderer, "Helmet/DamagedHelmet.gltf"));
 }
