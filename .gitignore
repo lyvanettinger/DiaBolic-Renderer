@@ -1,7 +1,5 @@
 # Build output
 build
-external/DirectXAgilitySDK
-external/DirectXShaderCompiler
 vcpkg_installed
 *.zip
 

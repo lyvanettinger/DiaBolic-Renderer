@@ -1,7 +1,12 @@
 {
   "dependencies": [
+    "glfw3",
+    "spdlog",
+    "directx-dxc",
     "directx-headers",
+    "directx12-agility",
     "directxmath",
-    "directxtex"
+    "directxtex",
+    "assimp"
   ]
 }
