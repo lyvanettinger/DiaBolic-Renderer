@@ -139,7 +139,7 @@ void GeometryPipeline::InitializeAssets()
 {
     auto commandList = _renderer.GetCopyCommandQueue().GetCommandList();
 
-    //_models.emplace_back(Model("Sting/Sting-Sword lowpoly.fbx"));
+    _models.emplace_back(Model("Sting/Sting-Sword lowpoly.fbx"));
 
     std::vector<XMFLOAT3> cubeVertices;
     std::vector<XMFLOAT3> cubeNormals;

@@ -20,15 +20,15 @@ void Model::Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2>& comma
 {
     for(auto mesh : _meshes)
     {
-        commandList->IASetIndexBuffer(&mesh->indexBufferView);
+        commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
 
         // Update the MVP matrix
         XMMATRIX mvpMatrix = XMMatrixMultiply(camera->model, camera->view);
         mvpMatrix = XMMatrixMultiply(mvpMatrix, camera->projection);
-        mesh->renderResources.MVP = mvpMatrix;
-        commandList->SetGraphicsRoot32BitConstants(0, 64, &mesh->renderResources, 0);
+        mesh->SetMVP(mvpMatrix);
+        commandList->SetGraphicsRoot32BitConstants(0, 64, &mesh->GetRenderResources(), 0);
 
-        commandList->DrawIndexedInstanced(mesh->indexCount, 1, 0, 0, 0);
+        commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
     }
 }
 
@@ -60,7 +60,7 @@ void Model::ProcessNode(const aiScene& scene, aiNode& node)
     for(uint32_t i = 0; i < node.mNumMeshes; ++i)
     {
         auto mesh = scene.mMeshes[node.mMeshes[i]];
-        _meshes.push_back(ProcessMesh(scene, *mesh));
+        _meshes.push_back(ProcessMesh(*mesh));
         _materials.push_back(ProcessMaterial(*scene.mMaterials[mesh->mMaterialIndex]));
     }
 
@@ -71,14 +71,69 @@ void Model::ProcessNode(const aiScene& scene, aiNode& node)
     }
 }
 
-std::shared_ptr<Mesh> Model::ProcessMesh(const aiScene& scene, aiMesh& mesh)
+std::shared_ptr<Mesh> Model::ProcessMesh(aiMesh& mesh)
 {
-    return std::make_shared<Mesh>();
+    std::vector<XMFLOAT3> positions;
+    std::vector<XMFLOAT3> normals;
+    std::vector<XMFLOAT2> uvs;
+    std::vector<uint16_t> indices;
+
+    for(uint32_t i = 0; i < mesh.mNumVertices; ++i)
+    {
+        XMFLOAT3 position;
+        position.x = mesh.mVertices[i].x;
+        position.y = mesh.mVertices[i].y;
+        position.z = mesh.mVertices[i].z;
+        positions.push_back(position);
+
+        if(mesh.HasNormals())
+        {
+            XMFLOAT3 normal;
+            normal.x = mesh.mNormals[i].x;
+            normal.y = mesh.mNormals[i].y;
+            normal.z = mesh.mNormals[i].z;
+            normals.push_back(normal);
+        }
+
+        if(mesh.mTextureCoords[0])
+        {
+            XMFLOAT2 uv;
+            uv.x = mesh.mTextureCoords[0][i].x;
+            uv.y = mesh.mTextureCoords[0][i].y;
+            uvs.push_back(uv);
+        }
+        else
+        {
+            uvs.push_back(XMFLOAT2(0.0f, 0.0f));
+        }
+    }
+
+    for(uint32_t i = 0; i < mesh.mNumFaces; ++i)
+    {
+        aiFace face = mesh.mFaces[i];
+
+        for(uint32_t j = 0; j < face.mNumIndices; ++j)
+        {
+            indices.push_back(face.mIndices[j]);
+        }
+    }
+
+    return std::make_shared<Mesh>(positions, normals, uvs, indices);
 }
 
 std::shared_ptr<Material> Model::ProcessMaterial(aiMaterial& material)
 {
     return std::make_shared<Material>();
+}
+
+Mesh::Mesh(std::vector<XMFLOAT3> p, std::vector<XMFLOAT3> n, std::vector<XMFLOAT2> t, std::vector<uint16_t> i)
+{
+    positions = p;
+    normals = n;
+    uvs = t;
+    indices = i;
+
+    // TODO: setup mesh
 }
 
 // D3D12_INDEX_BUFFER_VIEW Mesh::GetIndexBufferView()

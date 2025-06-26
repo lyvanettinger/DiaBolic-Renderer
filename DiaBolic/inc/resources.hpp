@@ -18,8 +18,24 @@ struct Buffer
     uint32_t cbvIndex{};
 };
 
-struct Mesh
+class Mesh
 {
+public:
+    Mesh(std::vector<DirectX::XMFLOAT3> positions, std::vector<DirectX::XMFLOAT3> normals, std::vector<DirectX::XMFLOAT2> uvs, std::vector<uint16_t> indices);
+    ~Mesh() { };
+
+    D3D12_INDEX_BUFFER_VIEW const& GetIndexBufferView() const { return indexBufferView; }
+    RenderResources const& GetRenderResources() const { return renderResources; }
+    uint32_t const& GetIndexCount() const { return indexCount; }
+
+    void SetMVP(DirectX::XMMATRIX mvp) { renderResources.MVP = mvp; }
+
+private:
+    std::vector<DirectX::XMFLOAT3> positions;
+    std::vector<DirectX::XMFLOAT3> normals;
+    std::vector<DirectX::XMFLOAT2> uvs;
+    std::vector<uint16_t> indices;
+
     Buffer positionBuffer{};
     Buffer normalBuffer{};
     Buffer uvBuffer{};
@@ -85,7 +101,7 @@ public:
 private:
     void LoadModel(const std::string& filePath);
     void ProcessNode(const aiScene& scene, aiNode& node);
-    std::shared_ptr<Mesh> ProcessMesh(const aiScene& scene, aiMesh& mesh);
+    std::shared_ptr<Mesh> ProcessMesh(aiMesh& mesh);
     std::shared_ptr<Material> ProcessMaterial(aiMaterial& material);
 
     std::vector<std::shared_ptr<Mesh>> _meshes;
