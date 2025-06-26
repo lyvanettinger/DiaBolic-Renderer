@@ -128,5 +128,6 @@ void GeometryPipeline::CreatePipeline()
 void GeometryPipeline::InitializeAssets()
 {
     //_models.emplace_back(Model(_renderer, "Fish/BarramundiFish.gltf"));
-    _models.emplace_back(Model(_renderer, "Helmet/DamagedHelmet.gltf"));
+    //_models.emplace_back(Model(_renderer, "Helmet/DamagedHelmet.gltf"));
+    _models.emplace_back(Model(_renderer, "ABeautifulGame/ABeautifulGame.gltf"));
 }
