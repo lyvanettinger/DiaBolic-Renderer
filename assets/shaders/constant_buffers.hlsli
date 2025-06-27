@@ -26,4 +26,5 @@ ConstantBufferStruct RenderResources
     uint normalBufferIndex;
     uint uvBufferIndex;
     uint textureIndex;
+    bool useTexture;
 };

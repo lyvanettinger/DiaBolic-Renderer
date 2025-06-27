@@ -87,11 +87,11 @@ struct Material
     bool isUnlit = false;  // 4
     bool recieveShadows = true;
 
-    std::shared_ptr<Texture> baseColorTextureIndex = nullptr;
-    std::shared_ptr<Texture> emissiveTextureIndex = nullptr;
-    std::shared_ptr<Texture> normalTextureIndex = nullptr;
-    std::shared_ptr<Texture> occlusionTextureIndex = nullptr;
-    std::shared_ptr<Texture> metallicRoughnessTextureIndex = nullptr;
+    std::shared_ptr<Texture> baseColorTexture = nullptr;
+    std::shared_ptr<Texture> emissiveTexture = nullptr;
+    std::shared_ptr<Texture> normalTexture = nullptr;
+    std::shared_ptr<Texture> occlusionTexture = nullptr;
+    std::shared_ptr<Texture> metallicRoughnessTexture = nullptr;
 };
 
 class Node

@@ -37,7 +37,15 @@ void Node::Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2>& comman
         rs.positionBufferIndex = _mesh->GetPositionBufferSRVIndex();
         rs.normalBufferIndex = _mesh->GetNormalBufferSRVIndex();
         rs.uvBufferIndex = _mesh->GetUVBufferSRVIndex();
-        rs.textureIndex = _material->baseColorTextureIndex->srvIndex;
+        if(_material->baseColorTexture)
+        {
+            rs.textureIndex = _material->baseColorTexture->srvIndex;
+            rs.useTexture = true;
+        }
+        else
+        {
+            rs.useTexture = false;
+        }
         commandList->SetGraphicsRoot32BitConstants(0, 64, &rs, 0);
 
         commandList->DrawIndexedInstanced(_mesh->GetIndexCount(), 1, 0, 0, 0);
@@ -204,11 +212,11 @@ void Model::ProcessMaterial(Renderer& renderer, aiMaterial& material)
     auto mat = std::make_shared<Material>();
     
     // TODO: Better material loading when implementing PBR
-    mat->baseColorTextureIndex = LoadMaterialTexture(renderer, material, aiTextureType_DIFFUSE);
-    mat->metallicRoughnessTextureIndex = LoadMaterialTexture(renderer, material, aiTextureType_GLTF_METALLIC_ROUGHNESS);
-    mat->emissiveTextureIndex = LoadMaterialTexture(renderer, material, aiTextureType_EMISSIVE);
-    mat->normalTextureIndex = LoadMaterialTexture(renderer, material, aiTextureType_NORMALS);
-    mat->occlusionTextureIndex = LoadMaterialTexture(renderer, material, aiTextureType_AMBIENT_OCCLUSION);
+    mat->baseColorTexture = LoadMaterialTexture(renderer, material, aiTextureType_DIFFUSE);
+    mat->metallicRoughnessTexture = LoadMaterialTexture(renderer, material, aiTextureType_GLTF_METALLIC_ROUGHNESS);
+    mat->emissiveTexture = LoadMaterialTexture(renderer, material, aiTextureType_EMISSIVE);
+    mat->normalTexture = LoadMaterialTexture(renderer, material, aiTextureType_NORMALS);
+    mat->occlusionTexture = LoadMaterialTexture(renderer, material, aiTextureType_AMBIENT_OCCLUSION);
 
     _materials.push_back(std::move(mat));
 }
