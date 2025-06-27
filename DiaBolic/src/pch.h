@@ -30,7 +30,6 @@
 #include <array>
 #include <mutex>
 #include <future>
-#include <asy
 
 // program specific
 #define FRAME_COUNT 2
