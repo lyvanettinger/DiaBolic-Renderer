@@ -85,19 +85,17 @@ void Model::LoadModel(Renderer& renderer, const std::string& fileName)
 void Model::ProcessNode(Renderer& renderer, const aiScene& scene, aiNode& node, std::shared_ptr<Node> parentNode)
 {
     auto newNode = std::make_shared<Node>();
-    auto transform = aiMatrix4x4ToXMMATRIX(node.mTransformation);
+    newNode->SetTransform(aiMatrix4x4ToXMMATRIX(node.mTransformation));
 
     // Set hierarchy
     if(parentNode != nullptr)
     {
         newNode->SetParent(parentNode);
         parentNode->AddChild(newNode);
-        newNode->SetTransform(parentNode->GetTransform() * transform);
     }
     else // is our model's root node
     {
         _rootNode = newNode;
-        newNode->SetTransform(transform);
     }
 
     // process meshes and its materials

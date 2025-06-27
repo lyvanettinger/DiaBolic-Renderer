@@ -107,7 +107,14 @@ public:
 
     std::shared_ptr<Mesh> const& GetMesh() const { return _mesh; }
     std::shared_ptr<Material> const& GetMaterial() const { return _material; }
-    DirectX::XMMATRIX const& GetTransform() const { return _transform; }
+    DirectX::XMMATRIX const& GetTransform() const 
+    { 
+        if(_parent)
+        {
+            return _parent->GetTransform() * _transform;
+        }
+        return _transform; 
+    }
 
 private:
     std::shared_ptr<Mesh> _mesh = nullptr;

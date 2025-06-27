@@ -60,8 +60,8 @@ void Renderer::Update(float deltaTime, GLFWwindow* window)
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
     {
         // Update yaw and pitch
-        _camera->yaw += (_previousMousePos.x - cursorPosX) * 0.1f;
-        _camera->pitch += (_previousMousePos.y - cursorPosY) * 0.1f;
+        _camera->yaw += (cursorPosX - _previousMousePos.x) * 0.1f;
+        _camera->pitch += (cursorPosY - _previousMousePos.y) * 0.1f;
 
         if (_camera->yaw > 360.0f) 
             _camera->yaw -= 360.0f;
