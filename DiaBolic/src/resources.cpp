@@ -57,7 +57,7 @@ void Node::Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2>& comman
     }
 }
 
-void Model::LoadModel(Renderer& renderer, const std::string& fileName)
+void Model::LoadModel(Renderer& renderer, ModelCPUData& data)
 {
     fs::path filePath = fs::path("assets/models/") / fileName;
     if (!fs::exists(filePath))

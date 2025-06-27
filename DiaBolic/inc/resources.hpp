@@ -9,7 +9,11 @@
 class Renderer;
 class Model;
 struct Camera;
+struct ModelCPUData;
+struct MaterialCPUData;
+struct MeshCPUData;
 
+/// GPU RESOURCES
 struct Buffer
 {
     Microsoft::WRL::ComPtr<ID3D12Resource> resource = NULL;
@@ -130,7 +134,7 @@ private:
 class Model
 {
 public:
-    Model(Renderer& renderer, const std::string& fileName);
+    Model(Renderer& renderer, ModelCPUData& data);
 
     void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2>& commandList, const std::shared_ptr<Camera> camera);
 

@@ -3,6 +3,7 @@
 #include "resources.hpp"
 
 class Renderer;
+class ModelManager;
 struct Camera;
 
 class GeometryPipeline
@@ -19,7 +20,7 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> _pipelineState{};
 
-	std::vector<Model> _models;
+	ModelManager* _modelManager;
 
 	void CreatePipeline();
 	void InitializeAssets();

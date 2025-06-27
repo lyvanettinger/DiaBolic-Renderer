@@ -9,6 +9,7 @@
 #include "camera.hpp"
 #include "descriptor_heap.hpp"
 #include "utility/shader_compiler.hpp"
+#include "model_manager.hpp"
 
 using namespace Util;
 using namespace Microsoft::WRL;
@@ -17,6 +18,9 @@ GeometryPipeline::GeometryPipeline(Renderer& renderer, std::shared_ptr<Camera>& 
     : _renderer(renderer)
     , _camera(camera)
 {
+    // TODO: move ModelManager somewhere else
+    _modelManager = new ModelManager;
+
     CreatePipeline();
     InitializeAssets();
 }
@@ -36,10 +40,7 @@ void GeometryPipeline::PopulateCommandlist(const Microsoft::WRL::ComPtr<ID3D12Gr
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     // Render models
-    for(auto& model : _models)
-    {
-        model.Draw(commandList, _camera);
-    }
+    _modelManager->DrawModels(commandList, _camera);
 }
 
 void GeometryPipeline::Update(float deltaTime)
@@ -111,8 +112,11 @@ void GeometryPipeline::CreatePipeline()
 
 void GeometryPipeline::InitializeAssets()
 {
-    //_models.emplace_back(Model(_renderer, "Fish/BarramundiFish.gltf"));
-    //_models.emplace_back(Model(_renderer, "Helmet/DamagedHelmet.gltf"));
-    _models.emplace_back(Model(_renderer, "ABeautifulGame/ABeautifulGame.gltf"));
-    //_models.emplace_back(Model(_renderer, "Lantern/Lantern.gltf"));
+    _modelManager->QueueModel("Fish/BarramundiFish.gltf");
+    _modelManager->QueueModel("Helmet/DamagedHelmet.gltf");
+    _modelManager->QueueModel("ABeautifulGame/ABeautifulGame.gltf");
+    _modelManager->QueueModel("Lantern/Lantern.gltf");
+
+    _modelManager->LoadQueuedModelsAsync();
+    _modelManager->LoadModelsGPU(_renderer);
 }
