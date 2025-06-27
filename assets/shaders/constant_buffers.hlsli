@@ -21,6 +21,7 @@
 ConstantBufferStruct RenderResources
 {
     float4x4 MVP;
+    float4x4 CameraVP;
     uint positionBufferIndex;
     uint normalBufferIndex;
     uint uvBufferIndex;

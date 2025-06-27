@@ -27,6 +27,8 @@ Renderer::Renderer(std::shared_ptr<Application> app) :
 {
     _aspectRatio = static_cast<float>(_width) / static_cast<float>(_height);
     _camera = std::make_shared<Camera>();
+    _camera->view = XMMatrixLookAtLH(_camera->position, _camera->position + _camera->front, XMVectorSet(0.0f, 1.0f,  0.0f, 0.0f));
+    _camera->projection = DirectX::XMMatrixPerspectiveFovLH(_camera->fov, _aspectRatio, _camera->nearZ, _camera->farZ);
 
     InitializeCore();
     InitializeCommandQueues();
@@ -47,8 +49,84 @@ Renderer::~Renderer()
     Flush();
 }
 
-void Renderer::Update(float deltaTime)
+void Renderer::Update(float deltaTime, GLFWwindow* window)
 {
+    // TODO: move camera logic to different class
+
+    /// calculate new rotation with inputs
+    double cursorPosX, cursorPosY;
+    glfwGetCursorPos(window, &cursorPosX, &cursorPosY);
+
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+    {
+        // Update yaw and pitch
+        _camera->yaw += (_previousMousePos.x - cursorPosX) * 0.1f;
+        _camera->pitch += (_previousMousePos.y - cursorPosY) * 0.1f;
+
+        if (_camera->yaw > 360.0f) 
+            _camera->yaw -= 360.0f;
+        if (_camera->yaw < -360.0f) 
+            _camera->yaw += 360.0f;
+
+        if (_camera->pitch > 89.0f)
+            _camera->pitch = 89.0f;
+        if (_camera->pitch < -89.0f)
+            _camera->pitch = -89.0f;
+    }
+
+    auto rotation = XMMatrixRotationQuaternion(
+        XMQuaternionRotationRollPitchYaw(
+            XMConvertToRadians(_camera->pitch), 
+            XMConvertToRadians(_camera->yaw), 
+            0.0f));
+    
+    // get rotation vectors for movement
+    XMVECTOR front = rotation.r[2];
+    XMVECTOR up = rotation.r[1];
+    XMVECTOR right = rotation.r[0];
+    /// calculate new translation with inputs
+    XMVECTOR vel = XMVectorSet(0.f, 0.f, 0.f, 0.f);
+    FLOAT acceleration = 10.0f;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    {
+        acceleration = 20.0f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        vel += front * acceleration;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        vel += front * -acceleration;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        vel += right * -acceleration;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        vel += right * acceleration;
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+    {
+        vel += up * -acceleration;
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        vel += up * acceleration;
+    }
+    vel *= deltaTime;
+    _camera->position += vel;
+    _camera->up = XMVector3Normalize(up);
+    _camera->front = XMVector3Normalize(front);
+
+    /// create new view matrix
+    _camera->view = XMMatrixLookAtLH(_camera->position, _camera->position + _camera->front, _camera->up);
+    _camera->model = rotation;
+
+    _previousMousePos = XMFLOAT2(cursorPosX, cursorPosY);
+
+    // Update pipelines
     _geometryPipeline->Update(deltaTime);
 }
 

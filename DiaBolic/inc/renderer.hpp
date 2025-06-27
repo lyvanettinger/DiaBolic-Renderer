@@ -13,7 +13,7 @@ public:
 	Renderer(std::shared_ptr<Application> app);
 	~Renderer();
     
-    void Update(float deltaTime);
+    void Update(float deltaTime, GLFWwindow* window);
 	void Render();
 
     // Getters
@@ -33,6 +33,7 @@ public:
 private:
     std::shared_ptr<Application> _app;
     std::shared_ptr<Camera> _camera;
+    DirectX::XMFLOAT2 _previousMousePos = DirectX::XMFLOAT2(0.0f, 0.0f);
 
     std::unique_ptr<GeometryPipeline> _geometryPipeline;
     std::unique_ptr<UIPipeline> _uiPipeline;

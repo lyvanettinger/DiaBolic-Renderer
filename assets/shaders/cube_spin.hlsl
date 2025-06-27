@@ -4,7 +4,8 @@ struct VSOutput
 {
     float2 uv : TEXCOORD;
     float3 normal : NORMAL0;
-    float4 position : SV_POSITION;
+    float4 clip_position : SV_POSITION;
+    float3 position : POSITION;
 };
 
 ConstantBuffer<RenderResources> renderResources : register(b0);
@@ -16,7 +17,9 @@ VSOutput VSmain(uint vertexID : SV_VertexID)
     StructuredBuffer<float3> normalBuffer = ResourceDescriptorHeap[renderResources.normalBufferIndex];
 
     VSOutput result;
-    result.position = mul(renderResources.MVP, float4(positionBuffer[vertexID], 1.0f));
+    float4 w_position = mul(renderResources.MVP, float4(positionBuffer[vertexID], 1.0f));
+    result.clip_position = mul(renderResources.CameraVP, w_position);
+    result.position = w_position.xyz;
     result.normal = normalBuffer[vertexID]; // TODO: multiply with inverse transpose
     result.uv = uvBuffer[vertexID];
 

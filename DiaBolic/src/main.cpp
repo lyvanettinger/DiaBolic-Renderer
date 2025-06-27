@@ -27,7 +27,7 @@ int main()
 
 		g_app->Update();
 		g_sample->Update();
-		g_renderer->Update(static_cast<float>(deltaTime.count() * 1e-9));
+		g_renderer->Update(static_cast<float>(deltaTime.count() * 1e-9), static_cast<GLFWwindow*>(g_app->GetWindow()));
 		g_renderer->Render();
 	}
 

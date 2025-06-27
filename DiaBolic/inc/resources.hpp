@@ -87,13 +87,37 @@ struct Material
     bool isUnlit = false;  // 4
     bool recieveShadows = true;
 
-    uint32_t baseColorTextureIndex = 0;
-    uint32_t emissiveTextureIndex = 0;
-    uint32_t normalTextureIndex = 0;
-    uint32_t occlusionTextureIndex = 0;
-    uint32_t metallicRoughnessTextureIndex = 0;
+    std::shared_ptr<Texture> baseColorTextureIndex = nullptr;
+    std::shared_ptr<Texture> emissiveTextureIndex = nullptr;
+    std::shared_ptr<Texture> normalTextureIndex = nullptr;
+    std::shared_ptr<Texture> occlusionTextureIndex = nullptr;
+    std::shared_ptr<Texture> metallicRoughnessTextureIndex = nullptr;
+};
 
-    std::string name = "";
+class Node
+{
+public:
+    void Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2>& commandList, const std::shared_ptr<Camera> camera);
+
+    void SetMesh(std::shared_ptr<Mesh>& mesh) { _mesh = mesh; };
+    void SetMaterial(std::shared_ptr<Material>& material) { _material = material; }
+    void SetParent(std::shared_ptr<Node>& node) { _parent = node; }
+    void SetTransform(DirectX::XMMATRIX transform) { _transform = transform; }
+    void AddChild(std::shared_ptr<Node>& node) { _children.emplace_back(node); }
+
+    std::shared_ptr<Mesh> const& GetMesh() const { return _mesh; }
+    std::shared_ptr<Material> const& GetMaterial() const { return _material; }
+    DirectX::XMMATRIX const& GetTransform() const { return _transform; }
+
+private:
+    std::shared_ptr<Mesh> _mesh = nullptr;
+    std::shared_ptr<Material> _material = nullptr;
+
+    // TODO: Handle transforms differently?
+    DirectX::XMMATRIX _transform = DirectX::XMMatrixIdentity();
+
+    std::shared_ptr<Node> _parent = nullptr;
+    std::vector<std::shared_ptr<Node>> _children;
 };
 
 class Model
@@ -105,15 +129,15 @@ public:
 
 private:
     void LoadModel(Renderer& renderer, const std::string& filePath);
-    void ProcessNode(Renderer& renderer, const aiScene& scene, aiNode& node);
+    void ProcessNode(Renderer& renderer, const aiScene& scene, aiNode& node, std::shared_ptr<Node> parentNode);
     void ProcessMesh(Renderer& renderer, aiMesh& mesh);
     void ProcessMaterial(Renderer& renderer, aiMaterial& material);
-    uint32_t LoadMaterialTexture(Renderer& renderer, aiMaterial& material, aiTextureType type);
+    std::shared_ptr<Texture> LoadMaterialTexture(Renderer& renderer, aiMaterial& material, aiTextureType type);
 
     std::vector<std::shared_ptr<Mesh>> _meshes;
     std::vector<std::shared_ptr<Material>> _materials;
-    std::vector<std::shared_ptr<Texture>> _textures;
-    // TODO: implement hierarchical scene/node structure
+    std::vector<std::shared_ptr<Texture>> _texturesLoaded; // TODO: move this to separate resource manager. this just exists to keep track of loaded textures
+    std::shared_ptr<Node> _rootNode;
 
     std::string _directory = "";
 };

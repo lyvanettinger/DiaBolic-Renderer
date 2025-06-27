@@ -44,23 +44,7 @@ void GeometryPipeline::PopulateCommandlist(const Microsoft::WRL::ComPtr<ID3D12Gr
 
 void GeometryPipeline::Update(float deltaTime)
 {
-    static double totalTime = 0.0f;
-    totalTime += deltaTime;
-    if (totalTime > 4.0f)
-    {
-        totalTime = 0.0f;
-    }
-
-    // Update the model matrix.
-    float angle = static_cast<float>(totalTime * 90.0);
-    const DirectX::XMVECTOR rotationAxis = DirectX::XMVectorSet(0, 1, 1, 0);
-    _camera->model = DirectX::XMMatrixRotationAxis(rotationAxis, DirectX::XMConvertToRadians(angle));
-
-    // Update the view matrix.
-    _camera->view = DirectX::XMMatrixLookAtLH(_camera->position, _camera->position + _camera->front, _camera->up);
-
-    // Update the projection matrix.
-    _camera->projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(_camera->fov), _renderer.GetAspectRatio(), 0.1f, 100.0f);
+    
 }
 
 void GeometryPipeline::CreatePipeline()
@@ -128,6 +112,7 @@ void GeometryPipeline::CreatePipeline()
 void GeometryPipeline::InitializeAssets()
 {
     //_models.emplace_back(Model(_renderer, "Fish/BarramundiFish.gltf"));
-    //_models.emplace_back(Model(_renderer, "Helmet/DamagedHelmet.gltf"));
-    _models.emplace_back(Model(_renderer, "ABeautifulGame/ABeautifulGame.gltf"));
+    _models.emplace_back(Model(_renderer, "Helmet/DamagedHelmet.gltf"));
+    //_models.emplace_back(Model(_renderer, "ABeautifulGame/ABeautifulGame.gltf"));
+    _models.emplace_back(Model(_renderer, "Lantern/Lantern.gltf"));
 }

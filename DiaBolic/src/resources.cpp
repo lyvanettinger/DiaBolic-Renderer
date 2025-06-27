@@ -1,6 +1,7 @@
 #include "resources.hpp"
 
 #include "utility/resource_util.hpp"
+#include "utility/transform_helpers.hpp"
 #include "utility/log.hpp"
 
 #include "command_queue.hpp"
@@ -21,22 +22,30 @@ Model::Model(Renderer& renderer, const std::string& fileName)
 
 void Model::Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2>& commandList, const std::shared_ptr<Camera> camera)
 {
-    for(auto mesh : _meshes)
-    {
-        commandList->IASetIndexBuffer(&mesh->GetIndexBufferView());
+    _rootNode->Draw(commandList, camera);
+}
 
-        // Update the MVP matrix
-        XMMATRIX mvpMatrix = XMMatrixMultiply(camera->model, camera->view);
-        mvpMatrix = XMMatrixMultiply(mvpMatrix, camera->projection);
+void Node::Draw(const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2>& commandList, const std::shared_ptr<Camera> camera)
+{
+    if(_mesh)
+    {
+        commandList->IASetIndexBuffer(&_mesh->GetIndexBufferView());
+
         RenderResources rs;
-        rs.MVP = mvpMatrix;
-        rs.positionBufferIndex = mesh->GetPositionBufferSRVIndex();
-        rs.normalBufferIndex = mesh->GetNormalBufferSRVIndex();
-        rs.uvBufferIndex = mesh->GetUVBufferSRVIndex();
-        rs.textureIndex = _textures[_materials[mesh->GetMaterialIndex()]->baseColorTextureIndex]->srvIndex;
+        rs.MVP = _transform;
+        rs.CameraVP = XMMatrixMultiply(camera->view, camera->projection);
+        rs.positionBufferIndex = _mesh->GetPositionBufferSRVIndex();
+        rs.normalBufferIndex = _mesh->GetNormalBufferSRVIndex();
+        rs.uvBufferIndex = _mesh->GetUVBufferSRVIndex();
+        rs.textureIndex = _material->baseColorTextureIndex->srvIndex;
         commandList->SetGraphicsRoot32BitConstants(0, 64, &rs, 0);
 
-        commandList->DrawIndexedInstanced(mesh->GetIndexCount(), 1, 0, 0, 0);
+        commandList->DrawIndexedInstanced(_mesh->GetIndexCount(), 1, 0, 0, 0);
+    }
+
+    for(auto child : _children)
+    {
+        child->Draw(commandList, camera);
     }
 }
 
@@ -59,23 +68,50 @@ void Model::LoadModel(Renderer& renderer, const std::string& fileName)
     }
     _directory = filePath.parent_path().string() + "/";
 
-    ProcessNode(renderer, *scene, *scene->mRootNode);
+    for(uint32_t i = 0; i < scene->mNumMeshes; ++i)
+    {
+        ProcessMesh(renderer, *scene->mMeshes[i]);
+    }
+
+    for(uint32_t i = 0; i < scene->mNumMaterials; ++i)
+    {
+        ProcessMaterial(renderer, *scene->mMaterials[i]);
+    }
+
+    // Recursively go over nodes to set-up hierarchy
+    ProcessNode(renderer, *scene, *scene->mRootNode, nullptr);
 }
 
-void Model::ProcessNode(Renderer& renderer, const aiScene& scene, aiNode& node)
+void Model::ProcessNode(Renderer& renderer, const aiScene& scene, aiNode& node, std::shared_ptr<Node> parentNode)
 {
-    // process meshes and its materials
-    for(uint32_t i = 0; i < node.mNumMeshes; ++i)
+    auto newNode = std::make_shared<Node>();
+    auto transform = aiMatrix4x4ToXMMATRIX(node.mTransformation);
+
+    // Set hierarchy
+    if(parentNode != nullptr)
     {
-        auto mesh = scene.mMeshes[node.mMeshes[i]];
-        ProcessMesh(renderer, *mesh);
-        ProcessMaterial(renderer, *scene.mMaterials[mesh->mMaterialIndex]);
+        newNode->SetParent(parentNode);
+        parentNode->AddChild(newNode);
+        newNode->SetTransform(parentNode->GetTransform() * transform);
+    }
+    else // is our model's root node
+    {
+        _rootNode = newNode;
+        newNode->SetTransform(transform);
+    }
+
+    // process meshes and its materials
+    if(node.mNumMeshes > 0)
+    {
+        auto mesh = _meshes[node.mMeshes[0]];
+        newNode->SetMesh(mesh);
+        newNode->SetMaterial(_materials[mesh->GetMaterialIndex()]);
     }
 
     // continue recursive node loading process
     for(uint32_t i = 0; i < node.mNumChildren; ++i)
     {
-        ProcessNode(renderer, scene, *node.mChildren[i]);
+        ProcessNode(renderer, scene, *node.mChildren[i], newNode);
     }
 }
 
@@ -136,10 +172,10 @@ void Model::ProcessMesh(Renderer& renderer, aiMesh& mesh)
         }
     }
     
-    _meshes.push_back(std::make_shared<Mesh>(renderer, positions, normals, uvs, indices, mesh.mMaterialIndex));
+    _meshes.emplace_back(std::make_shared<Mesh>(renderer, positions, normals, uvs, indices, mesh.mMaterialIndex));
 }
 
-uint32_t Model::LoadMaterialTexture(Renderer& renderer, aiMaterial& material, aiTextureType type)
+std::shared_ptr<Texture> Model::LoadMaterialTexture(Renderer& renderer, aiMaterial& material, aiTextureType type)
 {
     // check if material has this type of texture
     if(material.GetTextureCount(type) > 0)
@@ -147,36 +183,25 @@ uint32_t Model::LoadMaterialTexture(Renderer& renderer, aiMaterial& material, ai
         aiString str;
         material.GetTexture(type, 0, &str);
         // check if already loaded
-        for(uint32_t i = 0; i < _textures.size(); ++i)
+        for(uint32_t i = 0; i < _texturesLoaded.size(); ++i)
         {
-            if(std::strcmp(_textures[i]->name.data(), str.C_Str()) == 0)
+            if(std::strcmp(_texturesLoaded[i]->name.data(), str.C_Str()) == 0)
             {
                 dblog::info("[LOAD_MATERIAL_TEXTURE] Texture {0} already exists.", str.C_Str());
-                return i;
+                return _texturesLoaded[i];
             }
         }
         // add to vector when not found
-        _textures.push_back(std::make_shared<Texture>(renderer, _directory + str.C_Str()));
-        return _textures.size() - 1;
+        auto newTexture = std::make_shared<Texture>(renderer, _directory + str.C_Str());
+        _texturesLoaded.emplace_back(newTexture);
+        return newTexture;
     }
     dblog::info("[LOAD_MATERIAL_TEXTURE] Couldn't find texture for type {0}", static_cast<int>(type));
-    return 0;
+    return nullptr;
 }
 
 void Model::ProcessMaterial(Renderer& renderer, aiMaterial& material)
 {
-    aiString str = material.GetName();
-
-    // Check if material has already beed loaded
-    for(uint32_t i = 0; i < _materials.size(); ++i)
-    {
-        if(std::strcmp(_materials[i]->name.data(), str.C_Str()) == 0)
-        {
-            dblog::info("[PROCESS_MATERIAL] Material {0} already exists.", str.C_Str());
-            return;
-        }
-    }
-
     // Load material when not found
     auto mat = std::make_shared<Material>();
     
@@ -186,7 +211,6 @@ void Model::ProcessMaterial(Renderer& renderer, aiMaterial& material)
     mat->emissiveTextureIndex = LoadMaterialTexture(renderer, material, aiTextureType_EMISSIVE);
     mat->normalTextureIndex = LoadMaterialTexture(renderer, material, aiTextureType_NORMALS);
     mat->occlusionTextureIndex = LoadMaterialTexture(renderer, material, aiTextureType_AMBIENT_OCCLUSION);
-    mat->name = str.C_Str();
 
     _materials.push_back(std::move(mat));
 }
